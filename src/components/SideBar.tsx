@@ -12,7 +12,7 @@ const SideBar = () => {
 
   const menuItems = [
     {
-      path: '/',
+      path: '/home',
       label: '달력',
       activeIcon: (
         <Active_CalendarIcon />
