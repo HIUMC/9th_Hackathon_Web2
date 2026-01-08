@@ -100,7 +100,7 @@ const TransactionModal = () => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* 금액 */}
         <div>
           <label className="block text-sm font-semibold text-color-900 mb-2">
@@ -180,10 +180,12 @@ const TransactionModal = () => {
           />
         </div>
 
-        {/* 팁 */}
-        <div className="bg-color-100 rounded-lg p-4 text-sm text-color-600 text-center">
-          정확한 사용 금액이 불가, 카드는 선택 비율로 자칫 반환 해주세요.
-          <button type="button" className="block w-full mt-2 text-color-600 underline">
+        {/* 파일 섹션 */}
+        <div className="bg-color-100 rounded-[8px] border p-4 text-sm text-600 text-center">
+          <p className='text-[20px] font-normal'>첨부할 사진을 끌어다 놓거나, 파일 선택 버튼을 직접 선택해주세요.</p>
+          <button 
+            type="button" 
+            className="block w-[195px] h-[35px] mx-auto mt-2 text-color-600 underline border">
             파일 선택
           </button>
         </div>
