@@ -7,7 +7,7 @@ const TransactionModal = () => {
   const activeModal = useActiveModal();
   const { closeModal } = useModalActions();
   const [activeTab, setActiveTab] = useState<'income' | 'expense'>('income');
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
@@ -28,17 +28,11 @@ const TransactionModal = () => {
 
   const isFormValid = formData.amount && formData.category && formData.date;
 
-  const handleCategorySelect = (categoryName: string) => {
-    setFormData({ ...formData, category: categoryName });
-    setIsCategoryDropdownOpen(false);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: 실제 저장 로직
     console.log('Transaction data:', { ...formData, type: activeTab });
     closeModal();
-    // 폼 초기화
     setFormData({
       amount: '',
       category: '',
@@ -46,7 +40,6 @@ const TransactionModal = () => {
       memo: ''
     });
     setActiveTab('income');
-    setIsCategoryDropdownOpen(false);
   };
 
   const handleClose = () => {
@@ -58,7 +51,6 @@ const TransactionModal = () => {
       memo: ''
     });
     setActiveTab('income');
-    setIsCategoryDropdownOpen(false);
   };
 
   return (
@@ -119,37 +111,36 @@ const TransactionModal = () => {
           />
         </div>
 
-        {/* 카테고리 */}
-        <div className="relative">
+        {/* 카테고리 (Select + 커스텀 화살표) */}
+        <div>
           <label className="block text-sm font-semibold text-color-900 mb-2">
             카테고리 <span className="text-error">* 카테고리를 선택해주세요</span>
           </label>
-          <button
-            type="button"
-            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-            className="w-full px-4 py-3 border border-color-200 rounded-lg text-left hover:border-main transition-colors flex items-center justify-between"
-          >
-            <span className={formData.category ? 'text-color-900' : 'text-color-400'}>
-              {formData.category || '월급'}
-            </span>
-            <RightArrow className='rotate-90'/>
-          </button>
-
-          {/* 드롭다운 */}
-          {isCategoryDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-color-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="relative">
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className={`
+                w-full px-4 py-3 border border-color-200 rounded-lg 
+                focus:outline-none focus:ring-2 focus:ring-main
+                bg-white cursor-pointer
+                appearance-none
+                ${!formData.category ? 'text-color-400' : 'text-color-900'}
+              `}
+              required
+            >
+              <option value="" disabled>선택해주세요</option>
               {categories.map((category) => (
-                <button
-                  key={category.name}
-                  type="button"
-                  onClick={() => handleCategorySelect(category.name)}
-                  className="w-full px-4 py-3 text-left hover:bg-color-100 transition-colors flex items-center gap-3"
-                >
-                  <span className="text-color-900">{category.name}</span>
-                </button>
+                <option key={category.name} value={category.name}>
+                  {category.icon} {category.name}
+                </option>
               ))}
+            </select>
+            
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+              <RightArrow className='rotate-90 text-color-400'/>
             </div>
-          )}
+          </div>
         </div>
 
         {/* 날짜 */}
@@ -180,10 +171,12 @@ const TransactionModal = () => {
           />
         </div>
 
-        {/* 팁 */}
-        <div className="bg-color-100 rounded-lg p-4 text-sm text-color-600 text-center">
-          정확한 사용 금액이 불가, 카드는 선택 비율로 자칫 반환 해주세요.
-          <button type="button" className="block w-full mt-2 text-color-600 underline">
+        {/* 파일 섹션 */}
+        <div className="bg-color-100 rounded-[8px] border p-4 text-sm text-600 text-center">
+          <p className='text-[20px] font-normal'>첨부할 사진을 끌어다 놓거나, 파일 선택 버튼을 직접 선택해주세요.</p>
+          <button 
+            type="button" 
+            className="block w-[195px] h-[35px] mx-auto mt-2 text-color-600 underline border">
             파일 선택
           </button>
         </div>
