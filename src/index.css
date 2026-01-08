@@ -9,9 +9,9 @@
 }
 
 @theme {
-  --font-sans: "Pretendard"
+  --font-sans: "Pretendard";
   --color-main: #4F5BFF;
-  --color-mainvariant: #D9E2FF;
+  --color-mainvariant: #F2F5FF;
   --color-white: #FFFFFF;
   --color-100: #F4F6F8;
   --color-200: #E9EBEF;
