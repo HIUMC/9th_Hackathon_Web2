@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import wallet from "../assets/material-symbols_wallet.svg";
+import wallet from "../assets/icons/material-symbols_wallet.svg";
 
 const NavBar = () => {
   return (
