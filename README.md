@@ -3,3 +3,5 @@
 - react-router-dom
 - tailwindcss
 - vite-plugin-svgr
+- zustand
+- immer
