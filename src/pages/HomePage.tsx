@@ -1,21 +1,12 @@
-import { useState, useEffect } from "react";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  addDays,
-  isSameMonth,
-  isSameDay,
-  addMonths,
-  subMonths,
-} from "date-fns";
-import { ko } from "date-fns/locale";
-import Footer from "../components/Footer";
-import RightArrow from "../assets/icons/icon_arrow_right.svg?react";
-import LeftArrow from "../assets/icons/icon_arrow_left.svg?react";
-import TrashcanIcon from "../assets/icons/icon_light_trashcan.svg?react";
+import { useState, useEffect } from 'react';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import Footer from '../components/Footer';
+import RightArrow from '../assets/icons/icon_arrow_right.svg?react'
+import LeftArrow from '../assets/icons/icon_arrow_left.svg?react'
+import TrashcanIcon from '../assets/icons/icon_trashcan.svg?react'
+import TransactionModal from '../components/Modals/TransactionModal';
+import FloatingButton from '../components/FlaotingButton';
 
 interface Transaction {
   id: string;
@@ -211,8 +202,14 @@ const HomePage = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+        {/* Global Modals */}
+      <TransactionModal />
+      
+      {/* Floating Action Button */}
+      <FloatingButton />
       <Footer />
+
     </div>
   );
 };
