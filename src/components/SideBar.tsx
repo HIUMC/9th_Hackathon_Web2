@@ -62,7 +62,7 @@ const SideBar = () => {
                       : 'bg-white text-600 font-normal hover:bg-100 hover:text-800'}`
                     }
                 >
-                  {/* 3. 상태에 따라 다른 아이콘 렌더링 */}
+                  {/* 상태에 따라 다른 아이콘 렌더링 */}
                   <span className="w-5 h-5 flex items-center justify-center">
                     {isActive ? item.activeIcon : item.inactiveIcon}
                   </span>

@@ -8,7 +8,7 @@ const HomeLayout = () => {
       <NavBar />
       <div className="flex flex-1">
         <SideBar />
-        <main className="flex-1 bg-400 p-8">
+        <main className="flex-1 bg-mainvariant p-8">
           <Outlet />
         </main>
       </div>
