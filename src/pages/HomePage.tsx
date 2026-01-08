@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Footer from '../components/Footer';
 import RightArrow from '../assets/icons/icon_arrow_right.svg?react'
 import LeftArrow from '../assets/icons/icon_arrow_left.svg?react'
+import TrashcanIcon from '../assets/icons/icon_trashcan.svg?react'
 
 interface Transaction {
   id: string;
@@ -16,52 +17,70 @@ interface Transaction {
 
 const HomePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Mock 데이터
-  const transactions: Transaction[] = [
-    {
-      id: '1',
-      date: new Date(2025, 0, 15),
-      category: '식비',
-      amount: 15000,
-      type: 'expense',
-      memo: '점심 식사'
-    },
-    {
-      id: '2',
-      date: new Date(2025, 0, 15),
-      category: '월급',
-      amount: 3000000,
-      type: 'income',
-      memo: '1월 급여'
-    }
-  ];
+  useEffect(() => {
+    const fetchMonthlyData = async () => {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const mockData: Transaction[] = [
+        { id: '1', date: new Date(year, month, 5), category: '식비', amount: 12000, type: 'expense', memo: '점심' },
+        { id: '2', date: new Date(year, month, 15), category: '월급', amount: 3000000, type: 'income', memo: '급여' },
+        { id: '3', date: new Date(year, month, 15), category: '교통/차량', amount: 50000, type: 'expense', memo: '주유' },
+        { id: '4', date: new Date(year, month, 25), category: '쇼핑', amount: 150000, type: 'expense', memo: '의류' }
+      ];
+      setTransactions(mockData);
+    };
+    fetchMonthlyData();
+  }, [currentDate]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
 
-  const handlePrevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
-  };
 
-  const handleNextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-  };
+  // 선택된 날짜 필터링
+  const dailyTransactions = selectedDate 
+    ? transactions.filter(t => isSameDay(t.date, selectedDate))
+    : [];
+
+  const dailyIncome = dailyTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const dailyExpense = dailyTransactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const handleRemove = () => {
+    // 지출 내역 삭제 핸들러 
+  }
+
 
   const renderCalendar = () => {
     const days = [];
     let day = startDate;
-
+    
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const currentDay = day;
-        const dayTransactions = transactions.filter(t => 
-          isSameDay(t.date, currentDay)
-        );
         
+        // 1. 현재 날짜(currentDay)의 거래 내역 필터링
+        const dayTransactions = transactions.filter(t => isSameDay(t.date, currentDay));
+        
+        // 2. [추가] 현재 날짜의 수입/지출 합계 계산 (여기가 핵심입니다!)
+        const dayIncome = dayTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        const dayExpense = dayTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
         const isCurrentMonth = isSameMonth(currentDay, monthStart);
         const isSelected = selectedDate && isSameDay(currentDay, selectedDate);
         const hasTransaction = dayTransactions.length > 0;
@@ -69,24 +88,33 @@ const HomePage = () => {
         days.push(
           <div
             key={day.toString()}
-            className={`min-h-[100px] border border-color-200 p-2 cursor-pointer transition-colors ${
-              !isCurrentMonth ? 'bg-color-100 text-color-400' : 'bg-white hover:bg-color-100'
-            } ${isSelected ? 'ring-2 ring-main' : ''}`}
+            className={`
+              flex flex-col items-start w-full h-[120px] px-4 py-3 gap-[10px] rounded-[8px] 
+              border border-[#E2E4E8] cursor-pointer transition-colors 
+              ${!isCurrentMonth ? 'bg-100' : 'bg-white'} 
+              ${isSelected ? 'bg-mainvariant border border-main' : ''}`}
             onClick={() => setSelectedDate(currentDay)}
           >
             <div className="font-medium mb-1">{format(currentDay, 'd')}</div>
+            
             {hasTransaction && isCurrentMonth && (
-              <div className="text-xs space-y-1">
-                {dayTransactions.map(t => (
-                  <div
-                    key={t.id}
-                    className={`px-2 py-1 rounded ${
-                      t.type === 'income' ? 'bg-finance/10 text-finance' : 'bg-eat/10 text-eat'
-                    }`}
-                  >
-                    {t.category}
+              <div className="
+                leading-normal tracking-[-0.28px]
+                text-[14px] font-normal space-y-1 w-full overflow-hidden flex flex-col items-center"> 
+
+                {/* 3. [수정] dailyIncome 대신 위에서 계산한 dayIncome 사용 */}
+                {dayIncome > 0 && (
+                  <div className="text-main font-medium truncate w-full">
+                    +{dayIncome.toLocaleString()}
                   </div>
-                ))}
+                )}
+
+                {/* 4. [수정] dailyExpense 대신 위에서 계산한 dayExpense 사용 */}
+                {dayExpense > 0 && (
+                  <div className="text-error font-medium truncate w-full">
+                    -{dayExpense.toLocaleString()}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -94,30 +122,15 @@ const HomePage = () => {
         day = addDays(day, 1);
       }
     }
-
     return days;
   };
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income' && isSameMonth(t.date, currentDate))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense' && isSameMonth(t.date, currentDate))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const expenseByCategory = transactions
-    .filter(t => t.type === 'expense' && isSameMonth(t.date, currentDate))
-    .reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="max-w-7xl mx-auto mb-20">
+      {/* 달력 섹션 */}
+      <div className="bg-[#E2E4E8] rounded-[8px] shadow-sm p-6">
         {/* 헤더 */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-6">
           <LeftArrow className='cursor-pointer' onClick={handlePrevMonth}/>
           <span className="text-[24px] font-normal text-center">
             {format(currentDate, 'yyyy년 M월', { locale: ko })}
@@ -125,81 +138,84 @@ const HomePage = () => {
           <RightArrow className='cursor-pointer' onClick={handleNextMonth}/>
         </div>
 
-        {/* 요일 헤더 */}
-        <div className="grid grid-cols-7 mb-2">
+        {/* 요일 */}
+        <div className="grid grid-cols-7 mb-2 gap-2">
           {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-            <div key={day} className="text-center font-semibold text-color-600 py-2">
-              {day}
-            </div>
+            <div key={day} className="text-center font-semibold text-color-600 py-2">{day}</div>
           ))}
         </div>
 
         {/* 달력 */}
-        <div className="grid grid-cols-7 gap-0 border-l border-t border-color-200">
+        <div className="grid grid-cols-7 gap-2">
           {renderCalendar()}
         </div>
-
-        {/* 월별 통계 */}
-        <div className="mt-8 space-y-4">
-          <h2 className="text-lg font-bold text-color-900">
-            {format(currentDate, 'M월', { locale: ko })} 통계
-          </h2>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* 수입 */}
-            <div className="bg-color-100 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-finance rounded flex items-center justify-center">
-                  <span className="text-white text-xs">↑</span>
-                </div>
-                <span className="font-semibold text-color-900">수입</span>
-              </div>
-              <div className="text-2xl font-bold text-finance">
-                +{totalIncome.toLocaleString()} 원
-              </div>
-            </div>
-
-            {/* 지출 */}
-            <div className="bg-color-100 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-eat rounded flex items-center justify-center">
-                  <span className="text-white text-xs">↓</span>
-                </div>
-                <span className="font-semibold text-color-900">지출</span>
-              </div>
-              <div className="text-2xl font-bold text-eat">
-                -{totalExpense.toLocaleString()} 원
-              </div>
-            </div>
-          </div>
-
-          {/* 카테고리별 지출 */}
-          {Object.keys(expenseByCategory).length > 0 && (
-            <div className="space-y-2">
-              <h3 className="font-semibold text-color-900">카테고리별 지출</h3>
-              {Object.entries(expenseByCategory).map(([category, amount]) => (
-                <div key={category} className="flex items-center justify-between py-2 border-b border-color-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-color-900">{category}</span>
-                  </div>
-                  <span className="font-semibold text-eat">{amount.toLocaleString()} 원</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 잔액 */}
-          <div className="bg-main/5 rounded-lg p-4 border border-main/20">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-color-900">이번 달 잔액</span>
-              <span className="text-2xl font-bold text-main">
-                {(totalIncome - totalExpense).toLocaleString()} 원
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
+      {/* 상세 내역 섹션 */}
+      <div className=" bg-white rounded-[8px] shadow-sm p-6 mt-16">
+        {selectedDate && (
+          <div className="">
+            {/* 날짜 헤더 */}
+            <h2 className="text-[24px] font-normal text-900 mb-4">
+              {format(selectedDate, 'M/d (E)', { locale: ko })}
+            </h2>
 
+            {/*  거래 내역 리스트 (사진 스타일) */}
+            <div className="w-full">
+              {dailyTransactions.length > 0 ? (
+                dailyTransactions.map((t) => (
+                  <div 
+                    key={t.id} 
+                    className="flex items-center justify-between py-4 border-b border-mainvariant last:border-0"
+                  >
+                    <div className="flex items-center gap-4 ">
+                      <span className="text-[24px] font-normal text-900">
+                        {t.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className={`text-[24px] font-semibold ${
+                        t.type === 'income' 
+                          ? 'text-main'   
+                          : 'text-error'  
+                      }`}>
+                        {t.type === 'income' ? '+' : '-'} {t.amount.toLocaleString()} 원
+                      </span>
+                      {/* 삭제 버튼 */}
+                      <button className="
+                        flex
+                        px-3 py-[12px] bg-100 rounded-[8px] text-[20px] text-800 
+                        gap-[8px] pl-4 pr-5
+                        hover:bg-gray-200 transition-colors">
+                        <TrashcanIcon />
+                        <p>삭제</p>
+                      </button>
+                    </div>
+                  </div>
+                ))
+                ) : (
+                  <div className="py-8 text-center text-gray-400 bg-gray-50 rounded-lg">
+                    내역이 없습니다.
+                  </div>
+                )}
+            </div>
+
+            {/* 3. 하단 합계 */}
+            <div className="
+              flex justify-between items-center mt-6 pt-4 
+              text-600 text-[20px] font-normal
+              leading-normal tracking-[-0.4px]
+              border-t border-mainvariant">
+              <div className="flex gap-1">
+                <span>수입 합계 : {dailyIncome.toLocaleString()} 원</span>
+              </div>
+              <div className="flex gap-1">
+                <span>지출 합계 : {dailyExpense.toLocaleString()} 원</span>
+
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
       <Footer />
     </div>
   );
